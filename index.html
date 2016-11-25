@@ -1,0 +1,174 @@
+<html>
+<head>
+	<title>sentiChat</title>
+	<style type="text/css">
+	#chat{
+		height:500px;
+	}
+	#contentWrap{
+		display:none;
+	}
+	#chatwrap{
+		float:left;
+		border: 1px #800 solid;
+	}
+	</style>
+	<link rel="stylesheet" href="css/normalize.css">
+
+    <link rel='stylesheet prefetch' href='https://fonts.googleapis.com/css?family=Open+Sans'>
+<link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.3/jquery.mCustomScrollbar.min.css'>
+
+        <link rel="stylesheet" href="css/style.css">
+
+	<link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
+
+	<!--Import Google Icon Font-->
+      <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <!--Import materialize.css-->
+      <link type="text/css" rel="stylesheet" href="materialize/css/materialize.min.css"  media="screen,projection"/>
+      <link rel="stylesheet" href="css/style.css">
+
+      <!--Let browser know website is optimized for mobile-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+<header>
+	<!-- <img src="images/logo.jpg"> -->
+	<h1 id="senti" style="ext-align:center;">SentiChat</h1>
+</header>
+
+<div class="bg"></div>
+	
+	<div class="message-box" id="nickWrap" style="width: 400px;
+    height: 50px;
+    position: absolute;
+    top:0;
+    bottom:0;
+    left: 0;
+    right: 0;
+
+    margin: auto;
+">
+    <p id="nickError"></p>
+	<form id="setNick">
+		<input id="nickname" type="text" class="message-input" placeholder="Enter a username"></input>
+		<button type="submit" class="message-submit">LOGIN</button>
+		<p></p>
+		<p><br></p>
+		<p><br></p>
+		<!-- <h5 align="center">SENTIMENT ANALYSIS WITH CHAT APPLICATION</h5>
+		<h6 align="center">Done by :</h6>
+		<h6 align="center">Jeevan D C (1RV13CS062)</h6>  
+		<h6 align="center">Karthik N A (1RV13CS069)</h6>
+		<h6 align="center">Kartik K R (1RV13CS072)</h6>
+		<h6 align="center">Madhusudhan Aithal (1RV13CS078)</h6>
+		<h5 align="center">Guide : Dr. Anala M R</h5>    -->    
+	</form>
+	</div>
+	<div class="bg"></div>
+	<div id="contentWrap" class="message">
+	<div class="chat-title">
+    		<h1>chatroom</h1>
+    		<figure class="avatar">
+      		<img src="http://image.flaticon.com/icons/svg/265/265668.svg" /></figure>
+  		</div>
+  		<div id="chatWrap" style="
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 100;
+    width: 320px;
+    height: 500px;
+    margin: auto;" >
+			<div id="chat"  style=" max-height:500px; overflow-y:scroll; background-color: rgba(0,0,0,0.5)"></div>
+			<form id="send-message" class="message-box">
+			<input type="text" id="message" class="message-input" placeholder="Type message..."></input>
+    		<button type="submit" class="message-submit">Send</button>
+  		</form>
+		<div id ="namekr" style="position: fixed;
+    top: 0;
+    bottom: 100;
+    left: 700;
+    right: 0;
+    width: 150px;
+    height: 200px;
+    margin: auto;" class="chat-title">USERS</div>
+    <div id="users" style=" 
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 700;
+    right: 0;
+    width: 150px;
+    height: 200px;
+    margin: auto;" class="chat-title"></div>
+		
+  	</div>
+		
+		
+	</div>
+	
+	<script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript">
+		jQuery(function($){
+			var socket = io.connect();
+			var $nickForm = $('#setNick');
+			var $nickError = $('#nickError');
+			var $nickBox = $('#nickname');
+			var $messageForm = $('#send-message');
+			var $messageBox = $('#message');
+			var $chat = $('#chat');
+			var $users = $('#users');
+
+			$nickForm.submit(function(e){
+				e.preventDefault();
+				socket.emit('new user',$nickBox.val(),function(data){
+					if(data){
+						$('#nickWrap').hide();
+						$('#contentWrap').show();
+					}else{
+						$nickError.html('Username taken!');
+					}
+				});
+				$nickBox.val('');
+			});
+
+			socket.on('username',function(data){
+				var html = '';
+				for( i = 0; i < data.length; i++){
+					html += data[i] + '<br/>'
+				}
+				console.log(html);
+				$users.html(html);
+			});
+
+			$messageForm.submit(function(e){
+				e.preventDefault();
+				socket.emit('send message',$messageBox.val());
+				$messageBox.val('');
+			});
+
+			socket.on('new message',function(data){
+				var emoji ;
+				if(data.sentiment == 'pos')
+					emoji = '<i class="em em-grinning"></i>';
+				else if(data.sentiment == 'neg')
+					emoji = '<i class="em em-neutral_face"></i>';
+				else if(data.sentiment == 'neutral')
+					emoji = '<i class="em em-no_mouth"></i>';
+				else if(data.sentiment == 'meh')
+					emoji = '<i class="em em-mask"></i>';
+				else emoji ="";
+
+				$chat.append( '<p class="triangle-obtuse left">'+ data.nick.fontcolor("blue")+  "&nbsp&nbsp" +' : ' + '<b>'+ data.msg.fontcolor("white")+'</b>' + "&nbsp&nbsp" + emoji +'</p>'+"<br/>");
+			})
+
+		});
+	</script>
+
+        <script src="js/index.js"></script>
+    <h2>Jeevan D C Karthik N A  </h2>    
+</body>
+</html>
