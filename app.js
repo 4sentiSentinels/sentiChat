@@ -3,7 +3,7 @@ var express = require('express'),
 	server = require('http').createServer(app),
 	io = require('socket.io').listen(server),
 	request = require("request"),
-	nicknames = [];
+	users = {};
 
 app.use(express.static('public'))
 server.listen(3000);
@@ -15,7 +15,7 @@ app.get('/',function(req,res){
 
 io.sockets.on('connection',function(socket){
 	socket.on('new user',function(data,callback){
-		if(nicknames.indexOf(data) != -1){
+		if(data in users){
 			callback(false);
 		}else{
 			callback(true);
