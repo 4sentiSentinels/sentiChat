@@ -155,6 +155,16 @@
 				$messageBox.val('');
 			});
 
+			socket.on('load old messages', function(docs) {
+				for(let iter = 0; iter < docs.length; iter++) {
+					displayMessages(docs[iter]);
+				}
+			});
+
+			function displayMessages (data) {
+				$chat.append( '<span class="msg"> <p class="triangle-obtuse left">'+ data.nick+  "&nbsp&nbsp" +' : ' + '<b>'+ data.msg +'</b>' + "&nbsp&nbsp" +'</p>'+"</span> <br/>");
+			}
+
 			socket.on('new message',function(data){
 				var emoji ;
 				if(data.sentiment == 'pos')
