@@ -12,6 +12,13 @@
 		float:left;
 		border: 1px #800 solid;
 	}
+	.error{
+		color: red;
+	}
+	.whisper{
+		color: gray;
+		font-style: italic;
+	}
 	</style>
 	<link rel="stylesheet" href="css/normalize.css">
 	<link rel="shortcut icon" href="images/logo.JPG" />
@@ -130,7 +137,7 @@
 				$nickBox.val('');
 			});
 
-			socket.on('username',function(data){
+			socket.on('usernames',function(data){
 				var html = '';
 				for( i = 0; i < data.length; i++){
 					html += data[i] + '<br/>'
@@ -141,7 +148,10 @@
 
 			$messageForm.submit(function(e){
 				e.preventDefault();
-				socket.emit('send message',$messageBox.val());
+				socket.emit('send message',$messageBox.val(), function(data) {
+					//add
+					$chat.append('<span class="error"> <b> '+  data + '<br>' )
+				});
 				$messageBox.val('');
 			});
 
@@ -157,10 +167,16 @@
 					emoji = '<i class="em em-mask"></i>';
 				else emoji ="";
 
-				$chat.append( '<p class="triangle-obtuse left">'+ data.nick.fontcolor("blue")+  "&nbsp&nbsp" +' : ' + '<b>'+ data.msg.fontcolor("white")+'</b>' + "&nbsp&nbsp" + emoji +'</p>'+"<br/>");
+				$chat.append( '<span class="msg"> <p class="triangle-obtuse left">'+ data.nick.fontcolor("blue")+  "&nbsp&nbsp" +' : ' + '<b>'+ data.msg.fontcolor("white")+'</b>' + "&nbsp&nbsp" + emoji +'</p>'+"</span> <br/>");
 			})
 
+			socket.on('whisper', function(data) {
+				$chat.append('<span class="whisper"> <b> '+  data.nick +  ':<b>'+  data.msg + '</span><br> ' )
+			});
+
 		});
+
+		
 	</script>
 
         <script src="js/index.js"></script>
