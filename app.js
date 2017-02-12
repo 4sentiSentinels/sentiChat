@@ -1,4 +1,4 @@
-var express = require('express'),
+const express = require('express'),
 	app = express(),
 	server = require('http').createServer(app),
 	io = require('socket.io').listen(server),
@@ -7,6 +7,7 @@ var express = require('express'),
 	users = {};
 
 const bodyParser = require('body-parser')
+const stringSimilarity = require('string-similarity');
 
 app.set('view engine', 'ejs')
 
@@ -33,6 +34,26 @@ let chatSchema = mongoose.Schema({
 
 let Chat = mongoose.model('Message', chatSchema);
 
+function getUserMessages (docs) {
+	let userMessages = [];
+	var userSet = new Set();
+	for(let iter = 0; iter < docs.length - 1; iter++){
+		userSet.add(docs[iter].nick)
+	}
+	
+	for( item of userSet) 
+	{	var msg = ''
+		for(jter = 0 ; jter < docs.length; jter++ )
+		{
+			if(item === docs[jter].nick){
+				msg = msg + docs[jter].msg + ' ';
+			}
+		}
+		userMessages.push({user: item, msg: msg})
+	}
+	console.log(userMessages)
+	return userMessages;
+}
 
 app.get('/',function(req,res){
 	res.sendfile(__dirname + '/index.html');
@@ -40,11 +61,26 @@ app.get('/',function(req,res){
 
 app.get('/match',function(req,res){
 	let query = Chat.find({});
+	let stats = [];
 	query.sort('-created').exec(function(error, docs) {
-	if(error) throw error;
-	console.log('loaded');
-	res.render(__dirname + '/views/match', {docs});
+		if(error) throw error;
+		console.log('loaded');
+		let userMessages = getUserMessages(docs);
+		
+		for( let iter = 0; iter < userMessages.length; iter++) {
+			for( let jter = 0; jter < userMessages.length; jter++){
+				console.log(userMessages[iter], userMessages[jter])
+				if( userMessages[iter] !== undefined &&  userMessages[jter] !== undefined) {
+					let polarity = stringSimilarity.compareTwoStrings(userMessages[iter].msg, userMessages[jter].msg);
+					stats.push({ first : userMessages[iter].user, second: userMessages[jter].user,  polarity});
+				}
+					
+			}
+		}
+		console.log(stats);
+		res.render(__dirname + '/views/match', { stats: stats})
 	});
+	
 	//res.sendfile(__dirname + '/match.html');
 });
 
